@@ -59,9 +59,30 @@ This is where raw data becomes ML-ready data. Think of it as the kitchen prep be
 
 **Example functions:**
 ```python
-load_dataset()          # Reads raw data
-preprocess_data()       # Cleans and transforms
-create_dataloaders()    # Prepares batches for training
+# Reads raw data
+def load_dataset(
+    data_path: str
+) -> Any:
+    
+    # TODO: Implement data loading
+    pass
+
+# Cleans and transforms
+def preprocess_data(
+    raw_data: Any
+) -> Any:
+    
+    # TODO: Implement preprocessing
+    pass
+
+# Prepares batches for training
+def create_dataloaders(
+    processed_data: Any,
+    batch_size: int = 32
+) -> Tuple[Any, Any]:
+    
+    # TODO: Implement dataloader creation
+    pass
 ```
 
 **Connection:** Feeds processed data to `train.py` and `eval.py`
@@ -80,12 +101,25 @@ This module contains the blueprint of your ML models. It's like an architect's d
 
 **Example structure:**
 ```python
+# Neural network model class
 class MyModel(nn.Module):
-    def __init__(self):
-        # Define layers
+    # Initialize model layers
+    def __init__(self,
+        input_dim: int = 128,
+        hidden_dim: int = 256,
+        output_dim: int = 10
+    ) -> None:
+        
+        # TODO: Define layers
+        pass
     
-    def forward(self, x):
-        # Define forward pass
+    # Define forward pass
+    def forward(self,
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        
+        # TODO: Define forward pass logic
+        pass
 ```
 
 **Connection:** Used by `train.py` to instantiate and train, by `eval.py` to test, and by `inference.py` to make predictions
@@ -155,6 +189,8 @@ python main.py --mode eval    # Evaluate a model
 ```
 
 **Why it's important:** Provides a single, clear interface to your entire project. Instead of running scripts individually, you control everything from here.
+
+**Note:** The generated `main.py` includes commented example code in each TODO section showing how to use all the imported functions (`load_dataset`, `preprocess_data`, `create_dataloaders`, `MyModel`, `train_model`, `evaluate_model`, `run_inference`). These examples serve as a guide for implementing each workflow mode.
 
 **Example implementation:**
 ```python

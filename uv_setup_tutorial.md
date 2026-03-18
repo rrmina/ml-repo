@@ -68,10 +68,10 @@ my_ml_project/
 Create a `.python-version` file to tell UV which Python version to use:
 
 ```bash
-echo "3.11" > .python-version
+echo "3.12" > .python-version
 ```
 
-UV will automatically download and use Python 3.11 if you don't have it installed.
+UV will automatically download and use Python 3.12 if you don't have it installed.
 
 ---
 
@@ -418,8 +418,8 @@ That's it! UV handles:
 uv run --python 3.10 main.py
 
 # Change project Python version
-echo "3.12" > .python-version
-uv sync  # Recreates environment with Python 3.12
+echo "3.11" > .python-version
+uv sync  # Recreates environment with Python 3.11
 ```
 
 ### Creating Scripts in pyproject.toml
@@ -475,10 +475,10 @@ source ~/.bashrc  # or source ~/.zshrc
 **Solution:** UV will auto-download Python. If it fails:
 ```bash
 # Manually specify Python
-uv venv --python 3.11
+uv venv --python 3.12
 
 # Or use system Python
-uv venv --python python3.11
+uv venv --python python3.12
 ```
 
 ### Issue: Package conflicts

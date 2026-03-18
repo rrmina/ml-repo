@@ -51,8 +51,8 @@ uv init $PROJECT_NAME
 Set-Location $PROJECT_NAME
 
 # Set Python version
-Write-Status "Setting Python version to 3.11..."
-"3.11" | Out-File -FilePath ".python-version" -Encoding utf8 -NoNewline
+Write-Status "Setting Python version to 3.12..."
+"3.12" | Out-File -FilePath ".python-version" -Encoding utf8 -NoNewline
 
 # Create project structure
 Write-Status "Creating project structure..."
@@ -81,6 +81,7 @@ Write-Status "Creating main.py template..."
 @'
 import argparse
 import torch
+from typing import Any
 
 # Import all project modules
 from data import load_dataset, preprocess_data, create_dataloaders
@@ -90,27 +91,74 @@ from eval import evaluate_model
 from inference import run_inference
 
 
-def main(args):
-    """Main function that orchestrates the entire workflow."""
+# Main function that orchestrates the entire workflow.
+def main(
+    args: argparse.Namespace
+) -> None:
     
     # Set device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
+    print(f'Using device: {device}')
     
     if args.mode == 'train':
-        print("Training mode...")
+        print('Training mode...')
+        
         # TODO: Implement training workflow
+        # Example:
+        # raw_data = load_dataset(args.data_path)
+        # processed_data = preprocess_data(raw_data)
+        # train_loader, val_loader = create_dataloaders(processed_data, args.batch_size)
+        # 
+        # model = MyModel(
+        #     input_dim=args.input_dim,
+        #     hidden_dim=args.hidden_dim,
+        #     output_dim=args.output_dim
+        # ).to(device)
+        # 
+        # train_model(
+        #     model=model,
+        #     train_loader=train_loader,
+        #     val_loader=val_loader,
+        #     epochs=args.epochs,
+        #     learning_rate=args.lr,
+        #     device=device,
+        #     save_path=args.checkpoint_path
+        # )
         
     elif args.mode == 'eval':
-        print("Evaluation mode...")
+        print('Evaluation mode...')
+        
         # TODO: Implement evaluation workflow
+        # Example:
+        # model = MyModel().to(device)
+        # model.load_state_dict(torch.load(args.checkpoint_path))
+        # model.eval()
+        # 
+        # raw_data = load_dataset(args.data_path)
+        # processed_data = preprocess_data(raw_data)
+        # _, test_loader = create_dataloaders(processed_data)
+        # 
+        # results = evaluate_model(
+        #     model=model,
+        #     test_loader=test_loader,
+        #     device=device
+        # )
+        # print(f'Evaluation Results: {results}')
         
     elif args.mode == 'inference':
-        print("Inference mode...")
+        print('Inference mode...')
+        
         # TODO: Implement inference workflow
+        # Example:
+        # result = run_inference(
+        #     checkpoint_path=args.checkpoint_path,
+        #     input_data=args.input,
+        #     device=device
+        # )
+        # print(f'Inference Result: {result}')
     
     else:
-        print(f"Unknown mode: {args.mode}")
+        print(f'Unknown mode: {args.mode}')
 
 
 if __name__ == '__main__':
@@ -152,70 +200,149 @@ if __name__ == '__main__':
 Write-Status "Creating module stubs..."
 
 @'
-"""Data loading and preprocessing module."""
+# Data loading and preprocessing module.
+from typing import Any, Tuple
 
-def load_dataset(data_path):
-    """Load dataset from file."""
+# Load dataset from file.
+def load_dataset(
+    data_path: str
+) -> Any:
+    
     # TODO: Implement data loading
     pass
 
-def preprocess_data(raw_data):
-    """Preprocess raw data."""
+# Preprocess raw data.
+def preprocess_data(
+    raw_data: Any
+) -> Any:
+    
     # TODO: Implement preprocessing
     pass
 
-def create_dataloaders(processed_data, batch_size=32):
-    """Create data loaders for training/validation."""
+# Create data loaders for training/validation.
+def create_dataloaders(
+    processed_data: Any,
+    batch_size: int = 32
+) -> Tuple[Any, Any]:
+    
     # TODO: Implement dataloader creation
     pass
 '@ | Out-File -FilePath "data.py" -Encoding utf8
 
 @'
-"""Model architecture definitions."""
+# Model architecture definitions.
+import torch
 import torch.nn as nn
+from typing import Optional
 
+# Neural network model.
 class MyModel(nn.Module):
-    """Neural network model."""
-    
-    def __init__(self, input_dim=128, hidden_dim=256, output_dim=10):
+    def __init__(self,
+        input_dim: int = 128,
+        hidden_dim: int = 256,
+        output_dim: int = 10
+    ) -> None:
+        
         super(MyModel, self).__init__()
+        
         # TODO: Define model architecture
         pass
     
-    def forward(self, x):
-        """Forward pass."""
+    # Forward pass.
+    def forward(self,
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        
         # TODO: Implement forward pass
         pass
 '@ | Out-File -FilePath "models.py" -Encoding utf8
 
 @'
-"""Training logic and utilities."""
+# Training logic and utilities.
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from typing import Any
 
-def train_model(model, train_loader, val_loader, epochs, learning_rate, device, save_path):
-    """Train the model."""
+# Train the model.
+def train_model(
+    model: nn.Module,
+    train_loader: Any,
+    val_loader: Any,
+    epochs: int,
+    learning_rate: float,
+    device: torch.device,
+    save_path: str
+) -> None:
+    
     # TODO: Implement training loop
+    # Sample implementation:
+    
+    # # Set up optimizer and loss function
+    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # criterion = nn.CrossEntropyLoss()
+    # 
+    # # Training loop
+    # for epoch in range(epochs):
+    #     model.train()
+    #     train_loss = 0.0
+    #     
+    #     for batch_idx, (data, target) in enumerate(train_loader):
+    #         data, target = data.to(device), target.to(device)
+    #         optimizer.zero_grad()
+    #         output = model(data)
+    #         loss = criterion(output, target)
+    #         loss.backward()
+    #         optimizer.step()
+    #         train_loss += loss.item()
+    #     
+    #     # Validation
+    #     model.eval()
+    #     with torch.no_grad():
+    #         ...
+    #     
+    #     print(f'Epoch {epoch+1}/{epochs} - Loss: {train_loss/len(train_loader):.4f}')
+    # 
+    # # Save model
+    # torch.save(model.state_dict(), save_path)
     pass
 '@ | Out-File -FilePath "train.py" -Encoding utf8
 
 @'
-"""Evaluation and metrics."""
+# Evaluation and metrics.
+import torch
+import torch.nn as nn
+from typing import Any, Dict
 
-def evaluate_model(model, test_loader, device):
-    """Evaluate model performance."""
+# Evaluate model performance.
+def evaluate_model(
+    model: nn.Module,
+    test_loader: Any,
+    device: torch.device
+) -> Dict[str, float]:
+    
     # TODO: Implement evaluation
     pass
 '@ | Out-File -FilePath "eval.py" -Encoding utf8
 
 @'
-"""Inference and prediction utilities."""
+# Inference and prediction utilities.
+import torch
+from typing import Any, Optional
 
-def run_inference(checkpoint_path, input_data, device):
-    """Run inference on new data."""
+# Run inference on new data.
+def run_inference(
+    checkpoint_path: str,
+    input_data: Any,
+    device: torch.device
+) -> Any:
+    
     # TODO: Implement inference
     pass
 
 if __name__ == '__main__':
-    print("Inference demo")
+    print('Inference demo')
+    
     # TODO: Add demo code
 '@ | Out-File -FilePath "inference.py" -Encoding utf8
 
