@@ -42,15 +42,16 @@ REM Create project structure
 echo [INFO] Creating project structure...
 
 REM Create main Python files
-type nul > data.py
-type nul > models.py
 type nul > train.py
 type nul > eval.py
 type nul > main.py
 type nul > inference.py
 
-REM Create directories
+REM Create module directories
 if not exist "data" mkdir data
+if not exist "models" mkdir models
+type nul > data\__init__.py
+type nul > models\__init__.py
 if not exist "checkpoints" mkdir checkpoints
 
 REM Remove default hello.py if it exists

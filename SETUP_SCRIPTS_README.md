@@ -46,8 +46,9 @@ The setup scripts automate the entire project initialization:
 2. ✅ **Initialize Project** - Creates UV project with `uv init`
 3. ✅ **Set Python Version** - Creates `.python-version` file (Python 3.12)
 4. ✅ **Create Structure** - Creates all project files and directories:
-   - `data.py`, `models.py`, `train.py`, `eval.py`, `main.py`, `inference.py`
-   - `data/` and `checkpoints/` directories
+   - `train.py`, `eval.py`, `main.py`, `inference.py`
+   - `data/` and `models/` module directories with `__init__.py` files
+   - `checkpoints/` directory
 5. ✅ **Generate Templates** - Creates starter code in each module
    - Includes type annotations and proper formatting
    - `main.py` has commented example code showing how to use all imported functions
@@ -72,12 +73,15 @@ my_project/
 ├── uv.lock            # Lock file
 ├── README.md          # Project documentation
 ├── main.py            # Main orchestration (with template code)
-├── data.py            # Data loading (stub)
-├── models.py          # Model definitions (stub)
 ├── train.py           # Training logic (stub)
 ├── eval.py            # Evaluation metrics (stub)
 ├── inference.py       # Inference utilities (stub)
-├── data/              # Dataset directory
+├── data/              # Dataset implementations
+│   ├── __init__.py
+│   └── example_dataset.py
+├── models/            # Model architectures
+│   ├── __init__.py
+│   └── example_model.py
 └── checkpoints/       # Model checkpoints
 ```
 
@@ -94,8 +98,8 @@ my_project/
    ```
 
 3. **Implement your modules:**
-   - Edit `data.py` to load your dataset
-   - Define your model in `models.py`
+   - Edit `data/` to load your datasets
+   - Define your models in `models/`
    - Implement training logic in `train.py`
    - Add evaluation metrics in `eval.py`
    - Complete the workflow in `main.py`
@@ -358,9 +362,10 @@ cd my_project
 # Set Python version
 echo "3.12" > .python-version
 
-# Create files
-touch data.py models.py train.py eval.py main.py inference.py
-mkdir -p data checkpoints
+# Create files and directories
+touch train.py eval.py main.py inference.py
+mkdir -p data models checkpoints
+touch data/__init__.py models/__init__.py
 
 # Add dependencies
 uv add torch numpy pandas scikit-learn matplotlib tqdm

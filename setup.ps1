@@ -58,15 +58,16 @@ Write-Status "Setting Python version to 3.12..."
 Write-Status "Creating project structure..."
 
 # Create main Python files
-New-Item -ItemType File -Name "data.py" -Force | Out-Null
-New-Item -ItemType File -Name "models.py" -Force | Out-Null
 New-Item -ItemType File -Name "train.py" -Force | Out-Null
 New-Item -ItemType File -Name "eval.py" -Force | Out-Null
 New-Item -ItemType File -Name "main.py" -Force | Out-Null
 New-Item -ItemType File -Name "inference.py" -Force | Out-Null
 
-# Create directories
+# Create module directories
 New-Item -ItemType Directory -Name "data" -Force | Out-Null
+New-Item -ItemType Directory -Name "models" -Force | Out-Null
+New-Item -ItemType File -Name "data\__init__.py" -Force | Out-Null
+New-Item -ItemType File -Name "models\__init__.py" -Force | Out-Null
 New-Item -ItemType Directory -Name "checkpoints" -Force | Out-Null
 
 # Remove default hello.py if it exists
@@ -84,8 +85,8 @@ import torch
 from typing import Any
 
 # Import all project modules
-from data import load_dataset, preprocess_data, create_dataloaders
-from models import MyModel
+from data.example_dataset import create_dataloaders
+from models.example_model import ExampleModel
 from train import train_model
 from eval import evaluate_model
 from inference import run_inference
@@ -109,7 +110,7 @@ def main(
         # processed_data = preprocess_data(raw_data)
         # train_loader, val_loader = create_dataloaders(processed_data, args.batch_size)
         # 
-        # model = MyModel(
+        # model = ExampleModel(
         #     input_dim=args.input_dim,
         #     hidden_dim=args.hidden_dim,
         #     output_dim=args.output_dim
@@ -130,7 +131,7 @@ def main(
         
         # TODO: Implement evaluation workflow
         # Example:
-        # model = MyModel().to(device)
+        # model = ExampleModel().to(device)
         # model.load_state_dict(torch.load(args.checkpoint_path))
         # model.eval()
         # 
@@ -200,53 +201,75 @@ if __name__ == '__main__':
 Write-Status "Creating module stubs..."
 
 @'
-# Data loading and preprocessing module.
+# Data package - dataset implementations and dataloader logic.
+# Import dataset classes from this package.
+
+from .example_dataset import ExampleDataset, create_dataloaders
+
+__all__ = ['ExampleDataset', 'create_dataloaders']
+'@ | Out-File -FilePath "data\__init__.py" -Encoding utf8
+
+@'
+# Example dataset implementation.
 from typing import Any, Tuple
+import torch
+from torch.utils.data import Dataset, DataLoader
 
-# Load dataset from file.
-def load_dataset(
-    data_path: str
-) -> Any:
+class ExampleDataset(Dataset):
+    # Example dataset class.
     
-    # TODO: Implement data loading
-    pass
-
-# Preprocess raw data.
-def preprocess_data(
-    raw_data: Any
-) -> Any:
+    def __init__(self, data_path: str):
+        # TODO: Implement data loading
+        self.data = None
+        self.labels = None
     
-    # TODO: Implement preprocessing
-    pass
+    def __len__(self) -> int:
+        # TODO: Implement
+        return 0
+    
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        # TODO: Implement
+        pass
 
 # Create data loaders for training/validation.
 def create_dataloaders(
-    processed_data: Any,
+    data_path: str,
     batch_size: int = 32
-) -> Tuple[Any, Any]:
+) -> Tuple[DataLoader, DataLoader]:
     
     # TODO: Implement dataloader creation
     pass
-'@ | Out-File -FilePath "data.py" -Encoding utf8
+'@ | Out-File -FilePath "data\example_dataset.py" -Encoding utf8
 
 @'
-# Model architecture definitions.
+# Models package - model architecture definitions.
+# Import model classes from this package.
+
+from .example_model import ExampleModel
+
+__all__ = ['ExampleModel']
+'@ | Out-File -FilePath "models\__init__.py" -Encoding utf8
+
+@'
+# Example model implementation.
 import torch
 import torch.nn as nn
 from typing import Optional
 
 # Neural network model.
-class MyModel(nn.Module):
+class ExampleModel(nn.Module):
     def __init__(self,
         input_dim: int = 128,
         hidden_dim: int = 256,
         output_dim: int = 10
     ) -> None:
         
-        super(MyModel, self).__init__()
+        super(ExampleModel, self).__init__()
         
         # TODO: Define model architecture
-        pass
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
     
     # Forward pass.
     def forward(self,
@@ -254,8 +277,11 @@ class MyModel(nn.Module):
     ) -> torch.Tensor:
         
         # TODO: Implement forward pass
-        pass
-'@ | Out-File -FilePath "models.py" -Encoding utf8
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        return x
+'@ | Out-File -FilePath "models\example_model.py" -Encoding utf8
 
 @'
 # Training logic and utilities.
@@ -435,13 +461,16 @@ uv sync
 
 ``````
 $PROJECT_NAME/
-├── data.py           # Data loading and preprocessing
-├── models.py         # Model architecture definitions
 ├── train.py          # Training logic
 ├── eval.py           # Evaluation metrics
 ├── main.py           # Main orchestration script
 ├── inference.py      # Inference and prediction
-├── data/             # Dataset directory
+├── data/             # Dataset implementations
+│   ├── __init__.py
+│   └── example_dataset.py
+├── models/           # Model architectures
+│   ├── __init__.py
+│   └── example_model.py
 ├── checkpoints/      # Model checkpoints
 └── pyproject.toml    # Project configuration
 ``````
@@ -505,7 +534,7 @@ Write-Host "Location: $(Get-Location)"
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  1. cd $PROJECT_NAME (if not already there)"
-Write-Host "  2. Implement your modules (data.py, models.py, etc.)"
+Write-Host "  2. Implement your modules (data/, models/, etc.)"
 Write-Host "  3. Run your project: uv run main.py --mode train"
 Write-Host ""
 Write-Host "Installed packages:"

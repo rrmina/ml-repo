@@ -1,386 +1,443 @@
-# Project Framework
+# ML Research Project Codebase Framework
 
-This document provides a pedagogical guide to understanding the structure and workflow of a machine learning project.
+This document defines the recommended codebase structure for machine learning research projects.
 
-## Overview
+## Goal
 
-This project follows a modular design pattern that separates concerns into distinct components. Each file has a specific responsibility, making the codebase easier to understand, test, and maintain. Think of it as an assembly line: data flows through different stages, each handled by a specialized module.
+The goal is to ensure that projects are:
 
-## Project Structure
+- easy to read
+- easy to debug
+- easy to modify
+- easy to reproduce
+- easy to hand-over to other researchers
 
-```
-my_project/
-│
-├── data.py           # Step 1: Get and prepare your data
-├── models.py         # Step 2: Define your model architecture
-├── train.py          # Step 3: Train your model
-├── eval.py           # Step 4: Evaluate performance
-├── main.py           # Orchestrator: Brings everything together
-├── inference.py      # Demo: See your model in action
-│
-├── requirements.txt  # Dependencies needed
-├── checkpoints/      # Saved model weights
-└── data/            # Raw and processed datasets
-```
+This framework is intentionally designed for **research workflows**, not production systems.
 
-## Workflow: How Everything Connects
+It prioritizes:
 
-```
-data.py → models.py → train.py → eval.py → inference.py
-   ↓          ↓           ↓          ↓           ↓
-[Load]   [Define]   [Optimize]  [Measure]   [Predict]
-```
+- fast iteration
+- transparent implementation
+- experimental flexibility
+- low abstraction overhead
 
-All coordinated through **main.py**
+## Design Philosophy
 
----
+### 1. What You See Is What You Get
 
-## Component Details
+**Principle:**  
+> If something breaks, we want the error to be our error, and not a side-effect of unnecessary abstraction or external framework complexity.
 
-### 📦 `requirements.txt`
-**Purpose:** Dependency management
+The codebase should be written in a way that makes behaviour explicit and easy to trace.
 
-Contains all Python packages your project needs (e.g., `torch`, `numpy`, `pandas`). This ensures anyone can recreate your environment with `pip install -r requirements.txt`.
+An audience should be able to understand:
 
-**Why it matters:** Reproducibility is crucial in ML projects. This file documents exactly which versions of libraries were used.
+- where data is loaded
+- how it is transformed
+- how the model works
+- how training is performed
+- how loss is computed
+- how outputs are evaluated
 
----
+The implementations should not rely on excessive abstraction, hidden framework logic, or deeply nested modules.
 
-### 📊 `data.py`
-**Purpose:** Data loading and preprocessing
+We prefer code that is:
 
-This is where raw data becomes ML-ready data. Think of it as the kitchen prep before cooking.
+- explicit
+- inspectable
+- step-by-step
+- easy-to-debug
 
-**Key responsibilities:**
-- **Loading:** Read data from files (CSV, JSON, databases)
-- **Preprocessing:** Clean missing values, normalize features, encode categories
-- **Validation:** Check data quality and integrity
-- **Utilities:** Create data loaders, batching, train/test splits
+over code that is:
 
-**Example functions:**
+- overly clever
+- highly abstracted
+- framework heavy
+- difficult to trace during failure
+
+### 2. Prefer Explicit Pipelines over Magic!
+
+**Principle:**  
+> The code should be understandable by reading the project's own code, not by reading framework internals.
+
+Abstraction should not be introduced just to make the code look cleaner or more sophisticated, as too much abstraction creates hidden assumptions and debugging difficulty.
+
+The main training and evaluation flows should be visible from top to bottom. A new research member should be able to read `main.py` or `train.py` and understand the experiment without needing to mentally trace many deep and hidden layers of indirection.
+
+**Preferred style:**
+
 ```python
-# Reads raw data
-def load_dataset(
-    data_path: str
-) -> Any:
-    
-    # TODO: Implement data loading
-    pass
-
-# Cleans and transforms
-def preprocess_data(
-    raw_data: Any
-) -> Any:
-    
-    # TODO: Implement preprocessing
-    pass
-
-# Prepares batches for training
-def create_dataloaders(
-    processed_data: Any,
-    batch_size: int = 32
-) -> Tuple[Any, Any]:
-    
-    # TODO: Implement dataloader creation
-    pass
-```
-
-**Connection:** Feeds processed data to `train.py` and `eval.py`
-
----
-
-### 🏗️ `models.py`
-**Purpose:** Model architecture definitions
-
-This module contains the blueprint of your ML models. It's like an architect's drawing before construction begins.
-
-**Key responsibilities:**
-- **Architecture:** Define neural network layers, structure
-- **Classes:** Implement model classes (e.g., `MyNeuralNetwork`, `TransformerModel`)
-- **Configuration:** Set hyperparameters (layers, dimensions, activation functions)
-
-**Example structure:**
-```python
-# Neural network model class
-class MyModel(nn.Module):
-    # Initialize model layers
-    def __init__(self,
-        input_dim: int = 128,
-        hidden_dim: int = 256,
-        output_dim: int = 10
-    ) -> None:
-        
-        # TODO: Define layers
-        pass
-    
-    # Define forward pass
-    def forward(self,
-        x: torch.Tensor
-    ) -> torch.Tensor:
-        
-        # TODO: Define forward pass logic
-        pass
-```
-
-**Connection:** Used by `train.py` to instantiate and train, by `eval.py` to test, and by `inference.py` to make predictions
-
----
-
-### 🎯 `train.py`
-**Purpose:** Training logic
-
-This is where the learning happens. The model adjusts its weights to minimize errors on your data.
-
-**Key responsibilities:**
-- **Training loop:** Iterate over data, compute loss, update weights
-- **Optimization:** Choose optimizer (Adam, SGD), learning rate
-- **Checkpointing:** Save model weights periodically
-- **Logging:** Track loss, accuracy over epochs
-
-**Typical flow:**
-1. Initialize model from `models.py`
-2. Load data from `data.py`
-3. For each epoch:
-   - Forward pass → compute predictions
-   - Calculate loss
-   - Backward pass → compute gradients
-   - Update weights
-4. Save trained model
-
-**Connection:** Takes models and data, produces trained weights saved to `checkpoints/`
-
----
-
-### 📈 `eval.py`
-**Purpose:** Performance evaluation
-
-After training, you need to know: "How good is my model?" This module answers that question.
-
-**Key responsibilities:**
-- **Metrics:** Calculate accuracy, precision, recall, F1, etc.
-- **Testing:** Run model on held-out test data
-- **Reporting:** Generate performance summaries
-- **Analysis:** Confusion matrices, error analysis
-
-**Why separate from training?**
-- Keeps code clean and focused
-- Allows evaluation without retraining
-- Makes it easy to compare different models
-
-**Connection:** Loads trained models from `checkpoints/`, uses test data from `data.py`
-
----
-
-### 🎬 `main.py`
-**Purpose:** Central orchestration
-
-This is mission control. Almost all modules are imported here, and the entire pipeline is coordinated from this script.
-
-**Key responsibilities:**
-- **Entry point:** The script you run to start everything
-- **Integration:** Imports and connects all components
-- **Workflow:** `data.py` → `models.py` → `train.py` → `eval.py`
-- **CLI:** Parse command-line arguments (e.g., `--mode train`, `--epochs 50`)
-
-**Typical usage:**
-```bash
-python main.py --mode train   # Train a model
-python main.py --mode eval    # Evaluate a model
-```
-
-**Why it's important:** Provides a single, clear interface to your entire project. Instead of running scripts individually, you control everything from here.
-
-**Note:** The generated `main.py` includes commented example code in each TODO section showing how to use all the imported functions (`load_dataset`, `preprocess_data`, `create_dataloaders`, `MyModel`, `train_model`, `evaluate_model`, `run_inference`). These examples serve as a guide for implementing each workflow mode.
-
-**Example implementation:**
-```python
-# main.py - Import all modules at the top
-import argparse
 import torch
 
-# Import all project modules
-from data import load_dataset, preprocess_data, create_dataloaders
-from models import MyModel
-from train import train_model
-from eval import evaluate_model
-from inference import run_inference
+# Load trainloader, model, optimizer, and loss function
+trainloader = torch.utils.data.DataLoader(...)
+model = Seq2Seq(...)
+optimizer = torch.optim.Adam(...)
+loss_fn = torch.nn.CrossEntropyLoss(...)
 
-
-def main(args):
-    """Main function that orchestrates the entire workflow."""
+# Training loop
+for epoch in range(num_epochs):
+    train_loss = train_one_epoch(...)
+    val_loss = evaluate(...)
     
-    # Set device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"Using device: {device}")
+    # Check for early stopping
+    early_stopping_condition_met = \
+        check_early_stopping(val_loss, best_val_loss, patience)
     
-    if args.mode == 'train':
-        # Step 1: Load and prepare data
-        print("Loading data...")
-        raw_data = load_dataset(args.data_path)
-        processed_data = preprocess_data(raw_data)
-        train_loader, val_loader = create_dataloaders(
-            processed_data, 
-            batch_size=args.batch_size
-        )
-        
-        # Step 2: Initialize model
-        print("Initializing model...")
-        model = MyModel(
-            input_dim=args.input_dim,
-            hidden_dim=args.hidden_dim,
-            output_dim=args.output_dim
-        ).to(device)
-        
-        # Step 3: Train model
-        print("Starting training...")
-        train_model(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            epochs=args.epochs,
-            learning_rate=args.lr,
-            device=device,
-            save_path=args.checkpoint_path
-        )
-        
-    elif args.mode == 'eval':
-        # Load trained model and evaluate
-        print("Loading model for evaluation...")
-        model = MyModel().to(device)
-        model.load_state_dict(torch.load(args.checkpoint_path))
-        
-        # Load test data
-        raw_data = load_dataset(args.data_path)
-        processed_data = preprocess_data(raw_data)
-        _, test_loader = create_dataloaders(processed_data)
-        
-        # Evaluate
-        print("Evaluating model...")
-        results = evaluate_model(model, test_loader, device)
-        print(f"Evaluation Results: {results}")
-        
-    elif args.mode == 'inference':
-        # Run inference demo
-        print("Running inference...")
-        run_inference(
-            checkpoint_path=args.checkpoint_path,
-            input_data=args.input,
-            device=device
-        )
-    
-    else:
-        print(f"Unknown mode: {args.mode}")
-
-
-if __name__ == '__main__':
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(description='ML Project Main Script')
-    
-    # Mode selection
-    parser.add_argument('--mode', type=str, required=True,
-                       choices=['train', 'eval', 'inference'],
-                       help='Mode: train, eval, or inference')
-    
-    # Data arguments
-    parser.add_argument('--data_path', type=str, default='./data/dataset.csv',
-                       help='Path to dataset')
-    parser.add_argument('--batch_size', type=int, default=32,
-                       help='Batch size for training')
-    
-    # Model arguments
-    parser.add_argument('--input_dim', type=int, default=128,
-                       help='Input dimension')
-    parser.add_argument('--hidden_dim', type=int, default=256,
-                       help='Hidden dimension')
-    parser.add_argument('--output_dim', type=int, default=10,
-                       help='Output dimension')
-    
-    # Training arguments
-    parser.add_argument('--epochs', type=int, default=10,
-                       help='Number of training epochs')
-    parser.add_argument('--lr', type=float, default=0.001,
-                       help='Learning rate')
-    
-    # Checkpoint arguments
-    parser.add_argument('--checkpoint_path', type=str, 
-                       default='./checkpoints/model.pth',
-                       help='Path to save/load model checkpoint')
-    
-    # Inference arguments
-    parser.add_argument('--input', type=str, default=None,
-                       help='Input for inference mode')
-    
-    args = parser.parse_args()
-    main(args)
+    if early_stopping_condition_met:
+        print(f'Early stopping at epoch {epoch}')
+        break
 ```
 
----
+Avoid code design where the actual behavior is hidden behind:
 
-### 🔮 `inference.py`
-**Purpose:** Demonstration and prediction
+- callback stacks
+- lifecycle hooks
 
-This is your model's "showtime" - where you demonstrate what it can do on new, unseen data.
+### 3. Keep the Code Close to the Math / Research Idea
 
-**Key responsibilities:**
-- **Demo:** Show model capabilities with examples
-- **Prediction:** Generate outputs for new inputs
-- **Testing:** Quick sanity checks on trained models
-- **Deployment preview:** Simulate how the model would work in production
+**Principle:**  
+> The code should reflect the actual research idea, not bury it under software architecture patterns.
 
-**Example use cases:**
-- Generate text with a language model
-- Classify new images
-- Make predictions on custom inputs
-- Create visualizations of model outputs
+For research projects, the code should map naturally to the conceptual components of the method.
 
-**Connection:** Loads trained model from `checkpoints/`, may use utilities from `data.py` for preprocessing
+For example, if the research involves:
 
----
+- an encoder
+- a decoder
+- a ranking loss
+- negative sampler
+- a retrieval stage
 
-## 🚀 Getting Started
+then those concepts should appear clearly in the codebase, preferably in their **own module**.
 
-### Step-by-step workflow:
+### 4. Each ML Ingredient Has Its Own Role
 
-1. **Setup environment**
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Principle:**  
+> No module should do more than its intended role. Each ingredient contributes a single responsibility to the experiment recipe!
 
-2. **Prepare your data**
-   - Place raw data in `data/` folder
-   - Update `data.py` with your data loading logic
+This framework is organized around the principle that each component should focus on its own responsibility.
 
-3. **Define your model**
-   - Create model class in `models.py`
+| File/Directory | Responsibility |
+|------|----------------|
+| `train.py` | orchestrates training, validation, and experiment flow |
+| `data/` | dataset, preprocessing, and dataloader logic for multiple datasets |
+| `models/` | defines model architectures and forward computation for multiple models |
+| `losses.py` | defines the loss functions |
+| `predict.py` | handles inference on new inputs |
+| `evaluate.py` | handles evaluation of checkpoints independently |
+| `metrics.py` | contains reusable evaluation metrics |
+| `utils.py` / Fabric | contains generic and reusable 
+helper functions not specific to any other component (e.g., loading and saving functions, logging, etc) |
 
-4. **Train your model**
-   ```bash
-   python main.py --mode train
-   ```
+**Practical Implications:**
 
-5. **Evaluate performance**
-   ```bash
-   python main.py --mode eval
-   ```
+- Top-level scripts (`train.py`, `evaluate.py`, `predict.py`) are the only files that combine these ingredients to execute the experimental logic.
+- Other modules should not import each other unnecessarily.
 
-6. **Try inference**
-   ```bash
-   python inference.py
-   ```
 
----
+--------------------
 
-## 💡 Key Principles
+## Non-Goals
 
-**Modularity:** Each file has one clear purpose
-**Separation of Concerns:** Data, models, training, and evaluation are independent
-**Reusability:** Components can be mixed and matched for different projects
-**Maintainability:** Easy to debug, test, and extend
-**Reproducibility:** Clear structure makes results reproducible
+To keep the framework aligned with the research needs, the following are not primary goals:
 
----
+- optimizing for production deployment from day one
+- introducting software architecture patterns before they are necessary
+- reducing line count at the cost of readability and understandability
 
-## 📁 Directory Reference
+> Shorter code is not automatically better code, and at the same time, more abstract code is not necessarily better code. 
 
-- **`checkpoints/`**: Stores saved model weights during training
-- **`data/`**: Contains raw and processed datasets
+--------------------
+
+## Recommended Project Structure
+
+```text
+project/
+│
+├── train.py
+├── evaluate.py
+├── predict.py
+│
+├── data/
+│   ├── __init__.py
+│   ├── dataset1.py
+│   └── dataset2.py
+│
+├── models/
+│   ├── __init__.py
+│   ├── model1.py
+│   └── model2.py
+│
+├── losses.py
+├── metrics.py
+├── config.py
+├── utils.py
+│
+├── configs/
+│   ├── base.yaml
+│   └── experiment_1.yaml
+│
+├── tests/
+│
+├── outputs/
+│   ├── checkpoints/
+│   ├── logs/
+│   └── predictions/
+│
+├── notebooks/
+│
+├── requirements.txt
+├── README.md
+└── .gitignore
+
+```
+
+This is the recommended default structure for research projects.
+
+**Not all projects will require every file or folder**, but this should be the baseline starting point of the project. 
+
+For example, a standard Transformer that only uses log-likelihood loss does not require a losses.py file. However, for a model like BERT, which uses both Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) losses, it is highly recommended to define these in a separate `losses.py` file to be imported into `train.py`.
+
+### When to Use Directories vs. Single Files
+
+**For `data/` and `models/`:**
+
+- **Use a directory** when your project involves:
+  - Multiple different datasets (e.g., ImageNet, CIFAR-10, custom datasets)
+  - Multiple different model architectures (e.g., Transformer, LSTM, CNN)
+  - Shared components across datasets or models (e.g., common transforms, shared layers)
+  
+- **Use a single file** (`data.py` or `model.py`) when:
+  - Your project uses only one dataset
+  - Your project implements only one model architecture
+  - The code complexity is low enough to maintain in a single file
+
+**Migration path:** It's perfectly acceptable to start with single files (`data.py`, `model.py`) and migrate to directories as your project grows and requires multiple implementations.
+
+## Core File and Responsibilities
+
+### `train.py`
+
+#### Purpose
+
+> `train.py` should read like the main story of the experiment
+
+#### Responsibilities
+
+* load configuration, ideally via argparse or config.py
+* initialize dataset/dataloaders
+* initialize model
+* initialize optimizer, scheduler, loss
+* execute training loop
+* trigger validation
+* save checkpoints
+* log results
+
+#### Should not contain
+
+* model architecture definisitions
+* dataset and preprocessing details
+* reusable helpper function unrelated to orchestration
+
+### `models/`
+
+#### Purpose
+> `models/` contains model architecture definitions and forward computation for multiple models
+
+#### Responsibilities
+
+* neural network modules
+* layers and blocks
+* forward pass
+* model wrapper classes
+* one file per model architecture (e.g., `transformer.py`, `lstm.py`, `cnn.py`)
+
+#### Recommended Structure
+
+```text
+models/
+├── __init__.py          # Import and expose model classes
+├── transformer.py       # Transformer model implementation
+├── lstm.py              # LSTM model implementation
+└── components.py        # Shared model components (optional)
+```
+
+#### Should not contain
+
+* optimizer setup
+* checkpoint loading/saving
+* evaluation metric
+* training loops
+
+#### Usage Example
+
+```python
+# In train.py
+from models.transformer import TransformerModel
+from models.lstm import LSTMModel
+
+if config.model_type == 'transformer':
+    model = TransformerModel(...)
+elif config.model_type == 'lstm':
+    model = LSTMModel(...)
+```
+
+### `data/`
+
+#### Purpose
+> `data/` contains data-related logic for multiple datasets
+
+#### Responsibilities
+
+* dataset class definitions
+* caching of large datasets
+* dataloader creation
+* preprocessing
+* all that transforms raw inputs into model-ready tensors
+* one file per dataset type (e.g., `imagenet.py`, `cifar10.py`, `custom_dataset.py`)
+
+#### Recommended Structure
+
+```text
+data/
+├── __init__.py          # Import and expose dataset classes
+├── imagenet.py          # ImageNet dataset implementation
+├── cifar10.py           # CIFAR-10 dataset implementation
+├── custom_dataset.py    # Custom dataset implementation
+└── transforms.py        # Shared data transformations (optional)
+```
+
+#### Should not contain
+
+* training loop logic
+* model architecture
+* experiment-specific reports
+
+#### Usage Example
+
+```python
+# In train.py
+from data.imagenet import ImageNetDataset
+from data.cifar10 import CIFAR10Dataset
+
+if config.dataset == 'imagenet':
+    train_dataset = ImageNetDataset(...)
+elif config.dataset == 'cifar10':
+    train_dataset = CIFAR10Dataset(...)
+
+train_loader = torch.utils.data.DataLoader(train_dataset, ...)
+```
+
+### `losses.py`
+
+#### Purpose
+> `losses.py` defines the loss functions
+
+#### Responsibilities
+
+* loss function definitions and loss computation logic
+* any loss-specific helper functions
+
+#### Should not contian
+
+* model architecture
+* training loop logic
+* evaluation metric
+
+### `evaluate.py`
+
+#### Purpose
+> `evaluate.py` runs evaluation on validation or test data
+
+#### Responsibilities
+
+* load trained checkpoint
+* run model on validation/test set
+* computer evaluation metrics
+* generatee evaluation outputs and reports
+
+### `predict.py` | `inference.py`
+
+> `predict.py` runs inference using a trained model
+
+#### Responsibilities
+
+* load checkpoint config
+* load trained checkpoint
+* preprocess input data
+* run prediction
+* return or save outputs
+
+### `metrics.py`
+
+#### Purpose
+
+> `metrics.py` defines reusable evaluation metrics
+
+#### Responsibilities
+
+* model performance metrics
+* business metrics
+
+#### Should not contain
+
+* tensor-specific loss functions
+
+### `utils.py` | Lightning Fabric
+
+#### Purpose
+
+> `utils.py` contains small, reusuable, project-wide helper functions
+
+#### Responsibilities
+
+* seed setting
+* logging helpers
+* checkpoint save and load wrappers
+* other general-purpose file I/O
+* anything not owned by any of the core ingredients
+
+#### Should not contain
+
+* preprocessing
+* math
+
+### `config.py`
+
+#### Purpose
+
+> `config.py` defines the configuration schema and loading logic
+
+#### Responsibilities
+
+* define configuration schema
+* helper function for loading configs from file
+* provide configuration object to the rest of the codebase
+
+## Optional Folders
+### `configs/`
+
+* store experiment configurations
+
+### `outputs/`
+
+* store outputs
+
+### `notebooks/`
+
+* store notebooks
+
+## Optional scripts
+
+### run_experiment.sh
+
+#### Purpose
+> `run_experiment.sh` is a one-click script that runs the entire project and reproduces the results.
+
+#### Responsibilities
+
+* Set-up full experiment pipeline
+* Call the appropriate project modules in sequence
+* Ensure that experiments can be reproduced with minimal manual intervention
+

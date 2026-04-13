@@ -81,16 +81,19 @@ UV will automatically download and use Python 3.12 if you don't have it installe
 
 ```bash
 # Create the main Python modules
-touch data.py
-touch models.py
 touch train.py
 touch eval.py
 touch main.py
 touch inference.py
 
-# Create directories
+# Create module directories
 mkdir -p data
+mkdir -p models
 mkdir -p checkpoints
+
+# Create __init__.py for modules
+touch data/__init__.py
+touch models/__init__.py
 
 # Optional: Remove the sample hello.py file
 rm hello.py
@@ -101,13 +104,14 @@ Your structure should now look like:
 my_ml_project/
 ├── .python-version
 ├── pyproject.toml
-├── data.py
-├── models.py
 ├── train.py
 ├── eval.py
 ├── main.py
 ├── inference.py
 ├── data/
+│   └── __init__.py
+├── models/
+│   └── __init__.py
 ├── checkpoints/
 └── README.md
 ```
@@ -534,8 +538,8 @@ deactivate                  # Deactivate venv
 
 Now that you have UV set up, you can:
 
-1. ✅ Create your data loading code in `data.py`
-2. ✅ Define your model architecture in `models.py`
+1. ✅ Create your data loading code in the `data/` module
+2. ✅ Define your model architectures in the `models/` module
 3. ✅ Implement training logic in `train.py`
 4. ✅ Add evaluation metrics in `eval.py`
 5. ✅ Orchestrate everything in `main.py`
